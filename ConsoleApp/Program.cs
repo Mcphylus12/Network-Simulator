@@ -20,7 +20,14 @@ var pc3 = new Computer("PC3", logger);
 //pc1.DebugSend("This is a message From PC1"u8.ToArray());
 //pc2.DebugSend("Hello From PC2"u8.ToArray());
 //pc1.DebugSendFrame(pc2.MacAddress, "This is a message From PC1"u8.ToArray());
-pc1.DebugSendArp(pc2.IPAddress);
+//pc1.DebugSendArp(pc2.IPAddress);
+//await pc1.SendIP(pc2.IPAddress, "This is an IP message From PC1"u8.ToArray());
+
+pc2.Bind(15, b =>
+{
+    logger.Log(pc2, NetworkLayer.Port, Encoding.UTF8.GetString(b));
+});
+await pc1.SendUDP(pc2.IPAddress, 15, "This is a UDP message From PC1"u8.ToArray());
 
 Console.ReadLine();
 
@@ -47,11 +54,11 @@ class ConsoleLogger : INetworkLogger
             var payload = data switch
             {
                 null => string.Empty,
-                _ when _formatters.ContainsKey(data.GetType()) => _formatters[data.GetType()](data),
-                IDebugString ds => ds.ToDebugString(),
-                _ => $"No formatter for {data?.GetType()}"
+                _ when _formatters.ContainsKey(data.GetType()) => ": " + _formatters[data.GetType()](data),
+                IDebugString ds => ": " + ds.ToDebugString(),
+                _ => $": No formatter for {data?.GetType()}"
             };
-            Console.WriteLine($"[{device.Name}] ({layer}) {message}: {payload}");
+            Console.WriteLine($"[{device.Name}] ({layer}) {message}{payload}");
         }
     }
 }
