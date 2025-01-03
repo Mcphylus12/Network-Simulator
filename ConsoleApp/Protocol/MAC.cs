@@ -1,5 +1,6 @@
 ﻿namespace ConsoleApp.Protocol.MAC;
 
+// https://en.wikipedia.org/wiki/Ethernet_frame
 internal class MACFrame : IDebugString
 {
     private static readonly DataPacker _packer = new DataPacker([MacAddress.LENGTH, MacAddress.LENGTH, 2, 0]);

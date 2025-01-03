@@ -2,6 +2,7 @@
 
 namespace ConsoleApp.Protocol;
 
+// https://datatracker.ietf.org/doc/html/rfc768
 internal class UDPPacket
 {
     private static readonly DataPacker _packer = new DataPacker(

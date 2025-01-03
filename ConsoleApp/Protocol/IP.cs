@@ -3,6 +3,7 @@ using static ConsoleApp.Protocol.MAC.MACFrame;
 
 namespace ConsoleApp.Protocol;
 
+// https://datatracker.ietf.org/doc/html/rfc791
 internal class IPPacket
 {
     private static readonly DataPacker _packer = new DataPacker(
