@@ -1,12 +1,11 @@
-﻿using ConsoleApp.Protocol.MAC;
-using static ConsoleApp.Protocol.MAC.MACFrame;
+﻿using static ConsoleApp.Protocol.MAC.MACFrame;
 
 namespace ConsoleApp.Protocol;
 
 // https://datatracker.ietf.org/doc/html/rfc791
 internal class IPPacket
 {
-    private static readonly DataPacker _packer = new DataPacker(
+    private static readonly BytePacker _packer = new BytePacker(
     [
         1, // Ver & IHL
         1, // DSCP & ECN

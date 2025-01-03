@@ -1,11 +1,9 @@
-﻿using ConsoleApp.Protocol.MAC;
-
-namespace ConsoleApp.Protocol;
+﻿namespace ConsoleApp.Protocol;
 
 // https://datatracker.ietf.org/doc/html/rfc768
 internal class UDPPacket
 {
-    private static readonly DataPacker _packer = new DataPacker(
+    private static readonly BytePacker _packer = new BytePacker(
     [
         2,
         2,

@@ -5,7 +5,7 @@ namespace ConsoleApp.Protocol;
 // https://datatracker.ietf.org/doc/html/rfc6747
 internal class ARPPacket
 {
-    private static readonly DataPacker _dataPacker = new DataPacker([2, 2, 1, 1, 2, MacAddress.LENGTH, IPAddress.LENGTH, MacAddress.LENGTH, IPAddress.LENGTH]);
+    private static readonly BytePacker _dataPacker = new BytePacker([2, 2, 1, 1, 2, MacAddress.LENGTH, IPAddress.LENGTH, MacAddress.LENGTH, IPAddress.LENGTH]);
     private byte[] _data;
 
     public ARPPacket(byte[] payload)
