@@ -4,6 +4,16 @@ using ConsoleApp.Protocol;
 using ConsoleApp.Protocol.MAC;
 using System.Text;
 
+
+// Packets onto Named Packer
+// IP using BitPakcer
+// TLV class
+// DHCP Packet
+// Concept of Programs running on computers
+// DHCP Client and Server Programs
+// Router
+
+
 var logger = new ConsoleLogger((d, n) => n >= NetworkLayer.Arp);
 
 var @switch = new Switch("Switch1", logger, 3);
