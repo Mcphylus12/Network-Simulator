@@ -1,89 +1,103 @@
-﻿using System.Xml.Linq;
-
-namespace ConsoleApp;
-
-public class NamedBytePacker
-{
-    private readonly Dictionary<string, (int Offset, int Size)> _dataFormat;
-    public int Length { get; private set; }
-
-    public NamedBytePacker(IEnumerable<KeyValuePair<string, int>> format)
-    {
-        int offset = 0;
-        _dataFormat = new Dictionary<string, (int Offset, int Size)>();
-
-        foreach (var item in format)
-        {
-            _dataFormat[item.Key] = (offset, item.Value);
-            offset += item.Value;
-        }
-
-        Length = offset;
-    }
-
-    internal void Set(byte[] bytes, string name, byte[] data)
-    {
-        if (!_dataFormat.TryGetValue(name, out var info))
-        {
-            throw new Exception(name + " is not a support field");
-        }
-
-        Array.Copy(data, 0, bytes, info.Offset, info.Size);
-    }
-
-    internal byte[] Get(byte[] bytes, string name)
-    {
-        if (!_dataFormat.TryGetValue(name, out var info))
-        {
-            throw new Exception(name + " is not a support field");
-        }
-
-        if (info.Size == 0)
-        {
-            return bytes[info.Offset..];
-        }
-        else
-        {
-            return bytes[info.Offset..(info.Offset + info.Size)];
-        }
-    }
-}
+﻿namespace ConsoleApp;
 
 public class BytePacker
 {
-    private readonly int[] _format;
+    private readonly uint _size;
+    private readonly Dictionary<string, PackerSection> _packerSections;
 
-    public BytePacker(int[] format)
+    public BytePacker(IEnumerable<PackerSection> packerSections)
     {
-        _format = format;
+        uint offset = 0;
+
+        foreach (var item in packerSections)
+        {
+            item.Offset = offset;
+            offset += item.Size;
+        }
+
+        _size = offset;
+        _packerSections = packerSections.ToDictionary(ps => ps.Name);
     }
 
-    internal byte[] Pack(params byte[][] parts)
+    public byte[] CreatePacket(uint variableLength = 0)
     {
-        var bytes = new byte[parts.Sum(p => p.Length)];
-        using var stream = new MemoryStream(bytes);
-
-        for (int i = 0; i < parts.Length; i++)
-        {
-            stream.Write(parts[i], 0, _format[i] > 0 ? _format[i] : parts[i].Length);
-        }
-
-        return bytes;
+        return new byte[_size + variableLength];
     }
 
-    internal T GetField<T>(byte[] bytes, int index, Func<byte[], T> builder)
+    public T Get<T>(byte[] bytes, string name)
     {
-        var start = _format[0..index].Sum();
+        var section = GetSection(name);
+        var byteSection = section.Size == 0 ? bytes[(int)section.Offset..] : bytes[(int)section.Offset..(int)(section.Offset + section.Size)];
 
-        var length = _format[index];
+        return (T)section.FromBytes(byteSection);
+    }
 
-        if (length == 0)
+    private PackerSection GetSection(string name)
+    {
+        if (!_packerSections.ContainsKey(name))
         {
-            return builder(bytes[start..]);
+            throw new ArgumentException("Not a valid section", nameof(name));
         }
-        else
+
+        var section = _packerSections[name];
+        return section;
+    }
+
+    public void Set<T>(byte[] bytes, string name, T value)
+    {
+        if (value is null)
         {
-            return builder(bytes[start..(start + length)]);
+            throw new ArgumentException("Value cannot be null", nameof(value));
         }
+
+        var section = GetSection(name);
+
+        if (section is not PackerSection<T>)
+        {
+            throw new ArgumentException("Invalid value Type");
+        }
+
+        var byteSection = section.ToBytes(value);
+
+        Array.Copy(byteSection, 0, bytes, section.Offset, section.Size > 0 ? section.Size : byteSection.Length);
+    }
+
+    public abstract class PackerSection
+    {
+        public uint Offset { get; set; }
+        public uint Size { get; }
+        public string Name { get; }
+
+        protected PackerSection(string name, uint size)
+        {
+            Name = name;
+            Size = size;
+        }
+
+        internal abstract object FromBytes(byte[] byteSection);
+
+        internal abstract byte[] ToBytes(object value);
+    }
+
+    public class PackerSection<T> : PackerSection
+    {
+        private readonly Func<T, byte[]>? _toBytes;
+        private readonly Func<byte[], T>? _fromBytes;
+
+        public PackerSection(string name, uint size, Func<T, byte[]>? toBytes = null, Func<byte[], T>? fromBytes = null)
+            : base(name, size)
+        {
+            if (typeof(T) != typeof(byte[]) && (toBytes is null || fromBytes is null))
+            {
+                throw new ArgumentException("converters can only be null for byte arrays");
+            }
+
+            _toBytes = toBytes;
+            _fromBytes = fromBytes;
+        }
+
+        internal override object FromBytes(byte[] byteSection) => _fromBytes is null ? byteSection : _fromBytes(byteSection)!;
+
+        internal override byte[] ToBytes(object value) => _toBytes is null ? (byte[])value : _toBytes((T)value);
     }
 }
