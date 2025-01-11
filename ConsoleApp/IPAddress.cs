@@ -21,6 +21,8 @@ public class IPAddress
     public override string ToString() => string.Join('.', _bytes.Select(b => b.ToString()));
     public static bool operator ==(IPAddress b1, IPAddress b2) => b1.Equals(b2);
     public static bool operator !=(IPAddress b1, IPAddress b2) => !b1.Equals(b2);
+
+    public static implicit operator IPAddress(string stringrep) => new IPAddress(stringrep);
     public override bool Equals(object? obj) => obj is IPAddress other && Enumerable.SequenceEqual(other._bytes, _bytes);
     public override int GetHashCode() => _bytes.Aggregate(0, (a, b) => HashCode.Combine(a, b.GetHashCode()));
 }

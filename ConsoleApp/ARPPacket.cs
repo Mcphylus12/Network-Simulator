@@ -5,6 +5,9 @@ namespace ConsoleApp;
 // https://datatracker.ietf.org/doc/html/rfc6747
 public class ARPPacket
 {
+    public const ushort REQUEST = 0;
+    public const ushort RESPONSE = 1;
+
     private readonly static BytePacker _packer = new BytePacker(new List<BytePacker.PackerSection>
     {
         new BytePacker.PackerSection<ushort>("Operation", 2, BitConverter.GetBytes, b => BitConverter.ToUInt16(b, 0)),
@@ -27,10 +30,11 @@ public class ARPPacket
         bytes.CopyTo(Bytes, 0);
     }
 
-    public ARPPacket(MacAddress sourceHardwareAddress, IPAddress sourceProtocolAddress, MacAddress targetHardwareAddress, IPAddress targetProtocolAddress)
+    public ARPPacket(ushort type, MacAddress sourceHardwareAddress, IPAddress sourceProtocolAddress, MacAddress targetHardwareAddress, IPAddress targetProtocolAddress)
     {
         Bytes = _packer.CreatePacket();
 
+        _packer.Set(Bytes, "Operation", type);
         _packer.Set(Bytes, "SourceHardwareAddress", sourceHardwareAddress);
         _packer.Set(Bytes, "SourceProtocolAddress", sourceProtocolAddress);
         _packer.Set(Bytes, "TargetHardwareAddress", targetHardwareAddress);
